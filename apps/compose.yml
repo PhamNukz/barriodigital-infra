@@ -1,0 +1,97 @@
+name: barriodigital-apps
+
+# Asume el layout de checkout en el que se desarrollo el caso: todos los repos
+# como hermanos de este ("infra") bajo la misma carpeta de trabajo:
+#   BarrioDigital/{frontend-barriodigital, ms-barriodigital-bff, ...-requests,
+#                  ...-catalog, ...-notify, ...-audit, ...-report, infra}
+# En EC2 real: cambia cada "build:" por "image: <ECR_URI>/<repo>:<tag>" con las
+# imagenes ya construidas y subidas a un registry.
+#
+# apps/mq/kafka son 3 compose.yml (proyectos) separados que deben verse entre
+# si: primero crea la red compartida UNA vez --
+#   docker network create barriodigital-net
+# -- y levanta los 3 (orden sugerido: kafka, mq, apps).
+
+networks:
+  default:
+    name: barriodigital-net
+    external: true
+
+services:
+  frontend:
+    build: ../../frontend-barriodigital
+    ports: ["4200:80"]
+    depends_on: [bff]
+
+  bff:
+    build: ../../ms-barriodigital-bff
+    ports: ["8080:8080"]
+    environment: &aad
+      AAD_ISSUER_URI: ${AAD_ISSUER_URI}
+      AAD_API_CLIENT_ID: ${AAD_API_CLIENT_ID}
+      AAD_REQUIRED_SCOPE: ${AAD_REQUIRED_SCOPE:-access_as_user}
+      MS_REQUESTS_URL: http://requests:8081
+      MS_CATALOG_URL: http://catalog:8082
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
+    depends_on: [requests, catalog]
+
+  requests:
+    build: ../../ms-barriodigital-requests
+    ports: ["8081:8081"]
+    environment:
+      <<: *aad
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-1521}
+      DB_SERVICE: ${DB_SERVICE:-XEPDB1}
+      DB_USER: ${REQUESTS_DB_USER:-barriodigital_requests}
+      DB_PASSWORD: ${REQUESTS_DB_PASSWORD}
+      MS_CATALOG_URL: http://catalog:8082
+      RABBITMQ_HOST: rabbitmq1
+      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9092,kafka3:9092
+
+  catalog:
+    build: ../../ms-barriodigital-catalog
+    ports: ["8082:8082"]
+    environment:
+      <<: *aad
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-1521}
+      DB_SERVICE: ${DB_SERVICE:-XEPDB1}
+      DB_USER: ${CATALOG_DB_USER:-barriodigital_catalog}
+      DB_PASSWORD: ${CATALOG_DB_PASSWORD}
+
+  notify:
+    build: ../../ms-barriodigital-notify
+    environment:
+      RABBITMQ_HOST: rabbitmq1
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+
+  audit:
+    build: ../../ms-barriodigital-audit
+    ports: ["8083:8083"]
+    environment:
+      <<: *aad
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-1521}
+      DB_SERVICE: ${DB_SERVICE:-XEPDB1}
+      DB_USER: ${AUDIT_DB_USER:-barriodigital_audit}
+      DB_PASSWORD: ${AUDIT_DB_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9092,kafka3:9092
+
+  report:
+    build: ../../ms-barriodigital-report
+    ports: ["8084:8084"]
+    environment:
+      <<: *aad
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-1521}
+      DB_SERVICE: ${DB_SERVICE:-XEPDB1}
+      DB_USER: ${REPORT_DB_USER:-barriodigital_report}
+      DB_PASSWORD: ${REPORT_DB_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9092,kafka3:9092
+
+# ponytail: requests/catalog/audit/report apuntan al mismo DB_HOST con distinto
+# usuario/esquema (Database per Service via esquemas separados, no instancias
+# separadas) -- si el caso exige instancias Oracle fisicamente separadas,
+# cambiar por 4 hosts/instancias y 4 sets de variables DB_HOST.

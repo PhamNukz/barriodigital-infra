@@ -1,0 +1,91 @@
+name: barriodigital-kafka
+
+# 3 Zookeeper + 3 brokers + Kafka UI (seccion 7 y 9 del caso: topicos
+# requests.events / audit.timeline con 3 particiones y 3 replicas).
+# Antes de levantar: docker network create barriodigital-net (una sola vez).
+
+networks:
+  default:
+    name: barriodigital-net
+    external: true
+
+services:
+  zk1:
+    image: bitnami/zookeeper:3.9
+    hostname: zk1
+    environment:
+      ZOO_SERVER_ID: 1
+      ZOO_SERVERS: "server.1=zk1:2888:3888;2181,server.2=zk2:2888:3888;2181,server.3=zk3:2888:3888;2181"
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+    volumes: ["zk1-data:/bitnami/zookeeper"]
+
+  zk2:
+    image: bitnami/zookeeper:3.9
+    hostname: zk2
+    environment:
+      ZOO_SERVER_ID: 2
+      ZOO_SERVERS: "server.1=zk1:2888:3888;2181,server.2=zk2:2888:3888;2181,server.3=zk3:2888:3888;2181"
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+    volumes: ["zk2-data:/bitnami/zookeeper"]
+
+  zk3:
+    image: bitnami/zookeeper:3.9
+    hostname: zk3
+    environment:
+      ZOO_SERVER_ID: 3
+      ZOO_SERVERS: "server.1=zk1:2888:3888;2181,server.2=zk2:2888:3888;2181,server.3=zk3:2888:3888;2181"
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+    volumes: ["zk3-data:/bitnami/zookeeper"]
+
+  kafka1:
+    image: bitnami/kafka:3.7
+    hostname: kafka1
+    ports: ["9092:9092"]
+    depends_on: [zk1, zk2, zk3]
+    environment: &kafka-env
+      KAFKA_CFG_ZOOKEEPER_CONNECT: "zk1:2181,zk2:2181,zk3:2181"
+      KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_CFG_NUM_PARTITIONS: 3
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_CFG_BROKER_ID: 1
+      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka1:9092"
+    volumes: ["kafka1-data:/bitnami/kafka"]
+
+  kafka2:
+    image: bitnami/kafka:3.7
+    hostname: kafka2
+    ports: ["9093:9092"]
+    depends_on: [zk1, zk2, zk3]
+    environment:
+      <<: *kafka-env
+      KAFKA_CFG_BROKER_ID: 2
+      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka2:9092"
+    volumes: ["kafka2-data:/bitnami/kafka"]
+
+  kafka3:
+    image: bitnami/kafka:3.7
+    hostname: kafka3
+    ports: ["9094:9092"]
+    depends_on: [zk1, zk2, zk3]
+    environment:
+      <<: *kafka-env
+      KAFKA_CFG_BROKER_ID: 3
+      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka3:9092"
+    volumes: ["kafka3-data:/bitnami/kafka"]
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports: ["8085:8080"]
+    environment:
+      KAFKA_CLUSTERS_0_NAME: barriodigital
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka1:9092,kafka2:9092,kafka3:9092"
+    depends_on: [kafka1, kafka2, kafka3]
+
+volumes:
+  zk1-data:
+  zk2-data:
+  zk3-data:
+  kafka1-data:
+  kafka2-data:
+  kafka3-data:

@@ -1,0 +1,52 @@
+name: barriodigital-mq
+
+# Cluster de 2 nodos para las evaluaciones (seccion 7 del caso). El join es por
+# "sleep + join_cluster", suficiente para un ambiente de curso.
+# ponytail: en produccion usar el plugin de peer discovery (DNS/K8s/AWS) en vez
+# de este script secuencial -- aqui alcanza porque solo son 2 nodos fijos.
+#
+# Antes de levantar: docker network create barriodigital-net (una sola vez).
+
+networks:
+  default:
+    name: barriodigital-net
+    external: true
+
+services:
+  rabbitmq1:
+    image: rabbitmq:3.13-management
+    hostname: rabbitmq1
+    environment:
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:-barriodigital-secret-cookie}
+    ports:
+      - "5672:5672"
+      - "15672:15672" # Management UI: http://localhost:15672 (guest/guest)
+    volumes:
+      - rabbitmq1-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      retries: 5
+
+  rabbitmq2:
+    image: rabbitmq:3.13-management
+    hostname: rabbitmq2
+    environment:
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:-barriodigital-secret-cookie}
+    depends_on:
+      rabbitmq1:
+        condition: service_healthy
+    volumes:
+      - rabbitmq2-data:/var/lib/rabbitmq
+    entrypoint: >
+      bash -c "
+      rabbitmq-server -detached;
+      sleep 10;
+      rabbitmqctl stop_app;
+      rabbitmqctl join_cluster rabbit@rabbitmq1;
+      rabbitmqctl start_app;
+      tail -f /dev/null"
+
+volumes:
+  rabbitmq1-data:
+  rabbitmq2-data:
