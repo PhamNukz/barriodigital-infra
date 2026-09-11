@@ -4,8 +4,8 @@ name: barriodigital-apps
 # como hermanos de este ("infra") bajo la misma carpeta de trabajo:
 #   BarrioDigital/{frontend-barriodigital, ms-barriodigital-bff, ...-requests,
 #                  ...-catalog, ...-notify, ...-audit, ...-report, infra}
-# En EC2 real: cambia cada "build:" por "image: <ECR_URI>/<repo>:<tag>" con las
-# imagenes ya construidas y subidas a un registry.
+# En ec2-apps se usan las imagenes de GHCR (build-image.yml de cada repo). Para
+# construir local: docker compose -f compose.yml -f compose.local.yml up --build
 #
 # apps/mq/kafka corren en 3 EC2 distintas: se alcanzan por IP privada via
 # RABBITMQ_HOST y KAFKA_BOOTSTRAP_SERVERS en .env (ver .env.example). Los
@@ -13,14 +13,17 @@ name: barriodigital-apps
 
 services:
   frontend:
-    build: ../../frontend-barriodigital
+    image: ghcr.io/phamnukz/frontend-barriodigital:latest
+    restart: unless-stopped
     ports: ["80:80"]
     depends_on: [bff]
 
   bff:
-    build: ../../ms-barriodigital-bff
+    image: ghcr.io/phamnukz/ms-barriodigital-bff:latest
+    restart: unless-stopped
     ports: ["8080:8080"]
     environment: &aad
+      JAVA_TOOL_OPTIONS: -Xmx384m
       AAD_ISSUER_URI: ${AAD_ISSUER_URI}
       AAD_API_CLIENT_ID: ${AAD_API_CLIENT_ID}
       AAD_REQUIRED_SCOPE: ${AAD_REQUIRED_SCOPE:-access_as_user}
@@ -30,7 +33,8 @@ services:
     depends_on: [requests, catalog]
 
   requests:
-    build: ../../ms-barriodigital-requests
+    image: ghcr.io/phamnukz/ms-barriodigital-requests:latest
+    restart: unless-stopped
     ports: ["8081:8081"]
     environment:
       <<: *aad
@@ -46,7 +50,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka1:9092,kafka2:9092,kafka3:9092}
 
   catalog:
-    build: ../../ms-barriodigital-catalog
+    image: ghcr.io/phamnukz/ms-barriodigital-catalog:latest
+    restart: unless-stopped
     ports: ["8082:8082"]
     environment:
       <<: *aad
@@ -57,14 +62,17 @@ services:
       DB_PASSWORD: ${CATALOG_DB_PASSWORD}
 
   notify:
-    build: ../../ms-barriodigital-notify
+    image: ghcr.io/phamnukz/ms-barriodigital-notify:latest
+    restart: unless-stopped
     environment:
+      JAVA_TOOL_OPTIONS: -Xmx384m
       RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq1}
       RABBITMQ_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
 
   audit:
-    build: ../../ms-barriodigital-audit
+    image: ghcr.io/phamnukz/ms-barriodigital-audit:latest
+    restart: unless-stopped
     ports: ["8083:8083"]
     environment:
       <<: *aad
@@ -76,7 +84,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka1:9092,kafka2:9092,kafka3:9092}
 
   report:
-    build: ../../ms-barriodigital-report
+    image: ghcr.io/phamnukz/ms-barriodigital-report:latest
+    restart: unless-stopped
     ports: ["8084:8084"]
     environment:
       <<: *aad

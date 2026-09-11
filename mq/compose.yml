@@ -10,6 +10,7 @@ name: barriodigital-mq
 services:
   rabbitmq1:
     image: rabbitmq:3.13-management
+    restart: unless-stopped
     hostname: rabbitmq1
     environment:
       RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:-barriodigital-secret-cookie}
@@ -25,6 +26,7 @@ services:
 
   rabbitmq2:
     image: rabbitmq:3.13-management
+    restart: unless-stopped
     hostname: rabbitmq2
     environment:
       RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:-barriodigital-secret-cookie}

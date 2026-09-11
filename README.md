@@ -25,8 +25,8 @@ Verificar desde `ec2-apps`: `nc -zv 10.0.1.8 1521`, `nc -zv 10.0.1.254 5672`, `n
 
 - **RabbitMQ Management UI:** `ssh -L 15672:10.0.1.254:15672 apps` → http://localhost:15672 (guest/guest)
 - **Kafka UI:** `ssh -L 8085:10.0.1.29:8085 apps` → http://localhost:8085
-- **Frontend:** http://\<EIP\>
-- **BFF:** http://\<EIP\>:8080
+- **Frontend:** https://dnddhzpvgg.execute-api.us-east-1.amazonaws.com (el Gateway proxya `/` a ec2-apps:80; Entra exige https)
+- **BFF:** https://dnddhzpvgg.execute-api.us-east-1.amazonaws.com/api (con JWT); directo `http://100.60.226.205:8080` solo para diagnóstico
 
 Para desarrollo local (todo en una máquina), deja `RABBITMQ_HOST`, `KAFKA_BOOTSTRAP_SERVERS` y `KAFKA_PRIVATE_IP` en `host.docker.internal`.
 

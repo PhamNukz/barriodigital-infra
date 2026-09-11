@@ -1,0 +1,12 @@
+# Desarrollo local: construye desde los repos hermanos en vez de bajar de GHCR.
+#   docker compose -f compose.yml -f compose.local.yml up --build
+# No se llama compose.override.yml a proposito: compose lo cargaria solo y en
+# ec2-apps intentaria compilar.
+services:
+  frontend: { build: ../../frontend-barriodigital }
+  bff:      { build: ../../ms-barriodigital-bff }
+  requests: { build: ../../ms-barriodigital-requests }
+  catalog:  { build: ../../ms-barriodigital-catalog }
+  notify:   { build: ../../ms-barriodigital-notify }
+  audit:    { build: ../../ms-barriodigital-audit }
+  report:   { build: ../../ms-barriodigital-report }
