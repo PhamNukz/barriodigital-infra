@@ -1,3 +1,5 @@
 apps/.env
 mq/.env
 kafka/.env
+.idea/
+*.pem

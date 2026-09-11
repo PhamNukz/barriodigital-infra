@@ -42,7 +42,7 @@ services:
       <<: *aad
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT:-1521}
-      DB_SERVICE: ${DB_SERVICE:-XEPDB1}
+      DB_SERVICE: ${DB_SERVICE:-FREEPDB1}
       DB_USER: ${REQUESTS_DB_USER:-barriodigital_requests}
       DB_PASSWORD: ${REQUESTS_DB_PASSWORD}
       MS_CATALOG_URL: http://catalog:8082
@@ -56,7 +56,7 @@ services:
       <<: *aad
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT:-1521}
-      DB_SERVICE: ${DB_SERVICE:-XEPDB1}
+      DB_SERVICE: ${DB_SERVICE:-FREEPDB1}
       DB_USER: ${CATALOG_DB_USER:-barriodigital_catalog}
       DB_PASSWORD: ${CATALOG_DB_PASSWORD}
 
@@ -74,7 +74,7 @@ services:
       <<: *aad
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT:-1521}
-      DB_SERVICE: ${DB_SERVICE:-XEPDB1}
+      DB_SERVICE: ${DB_SERVICE:-FREEPDB1}
       DB_USER: ${AUDIT_DB_USER:-barriodigital_audit}
       DB_PASSWORD: ${AUDIT_DB_PASSWORD}
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9092,kafka3:9092
@@ -86,7 +86,7 @@ services:
       <<: *aad
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT:-1521}
-      DB_SERVICE: ${DB_SERVICE:-XEPDB1}
+      DB_SERVICE: ${DB_SERVICE:-FREEPDB1}
       DB_USER: ${REPORT_DB_USER:-barriodigital_report}
       DB_PASSWORD: ${REPORT_DB_PASSWORD}
       KAFKA_BOOTSTRAP_SERVERS: kafka1:9092,kafka2:9092,kafka3:9092
