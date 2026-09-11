@@ -2,43 +2,43 @@ name: barriodigital-kafka
 
 # 3 Zookeeper + 3 brokers + Kafka UI (seccion 7 y 9 del caso: topicos
 # requests.events / audit.timeline con 3 particiones y 3 replicas).
-# Antes de levantar: docker network create barriodigital-net (una sola vez).
-
-networks:
-  default:
-    name: barriodigital-net
-    external: true
+#
+# Corre solo en ec2-kafka. Los brokers anuncian KAFKA_PRIVATE_IP:9092/9093/9094
+# (puertos publicados en el host) para que apps, en otra EC2, pueda conectarse.
+# Requiere kafka/.env con KAFKA_PRIVATE_IP (ver .env.example).
+# ponytail: un solo listener anunciando la IP del host; el trafico entre brokers
+# tambien pasa por el host. Si molesta, agregar listener INTERNAL para la red docker.
 
 services:
   zk1:
-    image: bitnami/zookeeper:3.9
+    image: bitnamilegacy/zookeeper:3.9
     hostname: zk1
     environment:
       ZOO_SERVER_ID: 1
-      ZOO_SERVERS: "server.1=zk1:2888:3888;2181,server.2=zk2:2888:3888;2181,server.3=zk3:2888:3888;2181"
+      ZOO_SERVERS: "zk1:2888:3888,zk2:2888:3888,zk3:2888:3888"
       ALLOW_ANONYMOUS_LOGIN: "yes"
     volumes: ["zk1-data:/bitnami/zookeeper"]
 
   zk2:
-    image: bitnami/zookeeper:3.9
+    image: bitnamilegacy/zookeeper:3.9
     hostname: zk2
     environment:
       ZOO_SERVER_ID: 2
-      ZOO_SERVERS: "server.1=zk1:2888:3888;2181,server.2=zk2:2888:3888;2181,server.3=zk3:2888:3888;2181"
+      ZOO_SERVERS: "zk1:2888:3888,zk2:2888:3888,zk3:2888:3888"
       ALLOW_ANONYMOUS_LOGIN: "yes"
     volumes: ["zk2-data:/bitnami/zookeeper"]
 
   zk3:
-    image: bitnami/zookeeper:3.9
+    image: bitnamilegacy/zookeeper:3.9
     hostname: zk3
     environment:
       ZOO_SERVER_ID: 3
-      ZOO_SERVERS: "server.1=zk1:2888:3888;2181,server.2=zk2:2888:3888;2181,server.3=zk3:2888:3888;2181"
+      ZOO_SERVERS: "zk1:2888:3888,zk2:2888:3888,zk3:2888:3888"
       ALLOW_ANONYMOUS_LOGIN: "yes"
     volumes: ["zk3-data:/bitnami/zookeeper"]
 
   kafka1:
-    image: bitnami/kafka:3.7
+    image: bitnamilegacy/kafka:3.7
     hostname: kafka1
     ports: ["9092:9092"]
     depends_on: [zk1, zk2, zk3]
@@ -49,29 +49,29 @@ services:
       KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
       ALLOW_PLAINTEXT_LISTENER: "yes"
       KAFKA_CFG_BROKER_ID: 1
-      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka1:9092"
+      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://${KAFKA_PRIVATE_IP}:9092"
     volumes: ["kafka1-data:/bitnami/kafka"]
 
   kafka2:
-    image: bitnami/kafka:3.7
+    image: bitnamilegacy/kafka:3.7
     hostname: kafka2
     ports: ["9093:9092"]
     depends_on: [zk1, zk2, zk3]
     environment:
       <<: *kafka-env
       KAFKA_CFG_BROKER_ID: 2
-      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka2:9092"
+      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://${KAFKA_PRIVATE_IP}:9093"
     volumes: ["kafka2-data:/bitnami/kafka"]
 
   kafka3:
-    image: bitnami/kafka:3.7
+    image: bitnamilegacy/kafka:3.7
     hostname: kafka3
     ports: ["9094:9092"]
     depends_on: [zk1, zk2, zk3]
     environment:
       <<: *kafka-env
       KAFKA_CFG_BROKER_ID: 3
-      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka3:9092"
+      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://${KAFKA_PRIVATE_IP}:9094"
     volumes: ["kafka3-data:/bitnami/kafka"]
 
   kafka-ui:

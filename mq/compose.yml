@@ -5,12 +5,7 @@ name: barriodigital-mq
 # ponytail: en produccion usar el plugin de peer discovery (DNS/K8s/AWS) en vez
 # de este script secuencial -- aqui alcanza porque solo son 2 nodos fijos.
 #
-# Antes de levantar: docker network create barriodigital-net (una sola vez).
-
-networks:
-  default:
-    name: barriodigital-net
-    external: true
+# Corre solo en ec2-mq; apps lo alcanza por la IP privada (RABBITMQ_HOST).
 
 services:
   rabbitmq1:

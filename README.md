@@ -1,23 +1,34 @@
 # infra — BarrioDigital
 
-Tres `docker-compose.yml` independientes, uno por dominio de infraestructura (sección 7 del caso): `apps/`, `mq/` (RabbitMQ) y `kafka/`. Se comunican entre sí por una red Docker compartida.
+Tres `docker-compose.yml` independientes, uno por EC2 (sección 7 del caso): `apps/` → `ec2-apps`, `mq/` → `ec2-mq`, `kafka/` → `ec2-kafka`. Se comunican por IP privada (ver tabla en `barriodigital-docs/AWS-Infraestructura.md`).
 
 ## Orden de arranque
 
-```bash
-docker network create barriodigital-net   # una sola vez
+Las EC2 privadas no tienen internet ni git: copia la carpeta desde tu PC (los alias `apps`/`mq`/`kafka`/`db` son de `~/.ssh/config`).
 
-cd kafka && docker compose up -d
-cd ../mq && docker compose up -d
-cd ../apps
-cp .env.example .env   # completa tus valores de Azure AD y Oracle
-docker compose up -d --build
+```bash
+# 1. Kafka (ec2-kafka)
+scp -r kafka kafka:~/ && ssh kafka
+cd kafka && cp .env.example .env && docker compose up -d
+
+# 2. RabbitMQ (ec2-mq)
+scp -r mq mq:~/ && ssh mq
+cd mq && docker compose up -d
+
+# 3. Apps (ec2-apps)
+scp -r apps apps:~/ && ssh apps
+cd apps && cp .env.example .env   # completa Azure AD y contraseñas Oracle
+docker compose up -d
 ```
 
-- **RabbitMQ Management UI:** http://localhost:15672 (guest/guest)
-- **Kafka UI:** http://localhost:8085
-- **Frontend:** http://localhost:4200
-- **BFF:** http://localhost:8080
+Verificar desde `ec2-apps`: `nc -zv 10.0.1.8 1521`, `nc -zv 10.0.1.254 5672`, `nc -zv 10.0.1.29 9092`.
+
+- **RabbitMQ Management UI:** `ssh -L 15672:10.0.1.254:15672 apps` → http://localhost:15672 (guest/guest)
+- **Kafka UI:** `ssh -L 8085:10.0.1.29:8085 apps` → http://localhost:8085
+- **Frontend:** http://\<EIP\>
+- **BFF:** http://\<EIP\>:8080
+
+Para desarrollo local (todo en una máquina), deja `RABBITMQ_HOST`, `KAFKA_BOOTSTRAP_SERVERS` y `KAFKA_PRIVATE_IP` en `host.docker.internal`.
 
 ## Notas
 
