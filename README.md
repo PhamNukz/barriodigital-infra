@@ -23,6 +23,21 @@ docker compose up -d
 
 Verificar desde `ec2-apps`: `nc -zv 10.0.1.8 1521`, `nc -zv 10.0.1.254 5672`, `nc -zv 10.0.1.29 9092`.
 
+## `restart: always` (no cambiar a `unless-stopped`)
+
+Los tres compose usan `restart: always` a propósito. Con `unless-stopped`, un
+contenedor que quedó detenido porque se apagó el daemon **no** vuelve a arrancar
+cuando el daemon revive — y eso es exactamente lo que pasa en el ciclo
+stop/start de las EC2 del Learner Lab. Pasó en la práctica: tras reiniciar el
+lab, RabbitMQ y Kafka quedaron abajo, y como `requests` publica eventos al
+cambiar de estado, los cambios de estado empezaron a responder 503 (ver nota de
+timeouts en `ms-barriodigital-requests`). Con `always`, los contenedores vuelven
+solos al arrancar la instancia.
+
+Si Kafka queda inestable al arrancar todo de golpe, los brokers pueden ganarle a
+ZooKeeper (`NodeExistsException`): levanta primero `zk1 zk2 zk3`, espera ~20s y
+después el resto.
+
 - **RabbitMQ Management UI:** `ssh -L 15672:10.0.1.254:15672 apps` → http://localhost:15672 (guest/guest)
 - **Kafka UI:** `ssh -L 8085:10.0.1.29:8085 apps` → http://localhost:8085
 - **Frontend:** https://dnddhzpvgg.execute-api.us-east-1.amazonaws.com (el Gateway proxya `/` a ec2-apps:80; Entra exige https)

@@ -12,7 +12,7 @@ name: barriodigital-kafka
 services:
   zk1:
     image: bitnamilegacy/zookeeper:3.9
-    restart: unless-stopped
+    restart: always
     hostname: zk1
     environment:
       ZOO_SERVER_ID: 1
@@ -23,7 +23,7 @@ services:
 
   zk2:
     image: bitnamilegacy/zookeeper:3.9
-    restart: unless-stopped
+    restart: always
     hostname: zk2
     environment:
       ZOO_SERVER_ID: 2
@@ -34,7 +34,7 @@ services:
 
   zk3:
     image: bitnamilegacy/zookeeper:3.9
-    restart: unless-stopped
+    restart: always
     hostname: zk3
     environment:
       ZOO_SERVER_ID: 3
@@ -45,7 +45,7 @@ services:
 
   kafka1:
     image: bitnamilegacy/kafka:3.7
-    restart: unless-stopped
+    restart: always
     hostname: kafka1
     ports: ["9092:9092"]
     depends_on: [zk1, zk2, zk3]
@@ -62,7 +62,7 @@ services:
 
   kafka2:
     image: bitnamilegacy/kafka:3.7
-    restart: unless-stopped
+    restart: always
     hostname: kafka2
     ports: ["9093:9092"]
     depends_on: [zk1, zk2, zk3]
@@ -74,7 +74,7 @@ services:
 
   kafka3:
     image: bitnamilegacy/kafka:3.7
-    restart: unless-stopped
+    restart: always
     hostname: kafka3
     ports: ["9094:9092"]
     depends_on: [zk1, zk2, zk3]
@@ -86,7 +86,7 @@ services:
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
-    restart: unless-stopped
+    restart: always
     ports: ["8085:8080"]
     environment:
       KAFKA_CLUSTERS_0_NAME: barriodigital

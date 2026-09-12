@@ -14,13 +14,13 @@ name: barriodigital-apps
 services:
   frontend:
     image: ghcr.io/phamnukz/frontend-barriodigital:latest
-    restart: unless-stopped
+    restart: always
     ports: ["80:80"]
     depends_on: [bff]
 
   bff:
     image: ghcr.io/phamnukz/ms-barriodigital-bff:latest
-    restart: unless-stopped
+    restart: always
     ports: ["8080:8080"]
     environment: &aad
       JAVA_TOOL_OPTIONS: -Xmx384m
@@ -34,7 +34,7 @@ services:
 
   requests:
     image: ghcr.io/phamnukz/ms-barriodigital-requests:latest
-    restart: unless-stopped
+    restart: always
     ports: ["8081:8081"]
     environment:
       <<: *aad
@@ -51,7 +51,7 @@ services:
 
   catalog:
     image: ghcr.io/phamnukz/ms-barriodigital-catalog:latest
-    restart: unless-stopped
+    restart: always
     ports: ["8082:8082"]
     environment:
       <<: *aad
@@ -63,7 +63,7 @@ services:
 
   notify:
     image: ghcr.io/phamnukz/ms-barriodigital-notify:latest
-    restart: unless-stopped
+    restart: always
     environment:
       JAVA_TOOL_OPTIONS: -Xmx384m
       RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq1}
@@ -72,7 +72,7 @@ services:
 
   audit:
     image: ghcr.io/phamnukz/ms-barriodigital-audit:latest
-    restart: unless-stopped
+    restart: always
     ports: ["8083:8083"]
     environment:
       <<: *aad
@@ -85,7 +85,7 @@ services:
 
   report:
     image: ghcr.io/phamnukz/ms-barriodigital-report:latest
-    restart: unless-stopped
+    restart: always
     ports: ["8084:8084"]
     environment:
       <<: *aad
