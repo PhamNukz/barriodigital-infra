@@ -29,8 +29,10 @@ services:
       AAD_REQUIRED_SCOPE: ${AAD_REQUIRED_SCOPE:-access_as_user}
       MS_REQUESTS_URL: http://requests:8081
       MS_CATALOG_URL: http://catalog:8082
+      MS_AUDIT_URL: http://audit:8083
+      MS_REPORT_URL: http://report:8084
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
-    depends_on: [requests, catalog]
+    depends_on: [requests, catalog, audit, report]
 
   requests:
     image: ghcr.io/phamnukz/ms-barriodigital-requests:latest
