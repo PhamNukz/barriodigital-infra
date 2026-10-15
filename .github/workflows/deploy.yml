@@ -1,8 +1,14 @@
 name: deploy
+
+# SIN DISPARO AUTOMATICO desde el 2026-10-15. El puerto 22 de sg-apps quedo
+# restringido a /32 (item I4) y este job corre en un runner de GitHub con IP
+# dinamica: el rango de Actions son miles de CIDR y un SG admite 60 reglas, asi
+# que no hay forma de dejarlo entrar. Con el disparo por push, cada merge que
+# tocara apps/** dejaba main en rojo sin que nada estuviera mal.
+#
+# El despliegue real de apps/ es manual, igual que el de mq/ (ver README).
+# El boton queda por si alguna vez se reabre el 22; tal como esta hoy, falla.
 on:
-  push:
-    branches: [main]
-    paths: ['apps/**']
   workflow_dispatch:
 
 jobs:

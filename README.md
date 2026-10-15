@@ -29,6 +29,25 @@ cd ~/barriodigital-infra/apps && docker compose up -d
 
 Verificar desde `ec2-apps`: `nc -zv 10.0.1.8 1521`, `nc -zv 10.0.1.254 5672`, `nc -zv 10.0.1.29 9092`.
 
+## Desplegar `apps/` (manual desde el 2026-10-15)
+
+`deploy.yml` ya no dispara solo: al cerrar el puerto 22 de `sg-apps` a /32 (I4),
+el runner de GitHub dejo de poder entrar por SSH. El despliegue de `apps/` es
+este comando, que hace exactamente lo que hacia el workflow:
+
+```bash
+ssh apps "cd ~/barriodigital-infra && git pull --ff-only && cd apps && docker compose pull && docker compose up -d --remove-orphans && docker compose ps"
+```
+
+El `.env` no se reescribe: el que vive en la maquina es el bueno y esta
+verificado. Si alguna vez hay que regenerarlo, el contenido esta en el secret
+`APPS_ENV` y hay una copia en `~/respaldos-env/apps.env.bueno` en `ec2-apps`.
+
+> Al pegar ese `.env` a mano, cuidado con copiarlo desde la terminal: asi se
+> perdieron las 4 primeras lineas una vez y los 5 microservicios con seguridad
+> quedaron en bucle de reinicio por `issuer cannot be empty`. Vuelcalo a un
+> archivo y copia el archivo entero.
+
 ## `restart: always` (no cambiar a `unless-stopped`)
 
 Los tres compose usan `restart: always` a propósito. Con `unless-stopped`, un
