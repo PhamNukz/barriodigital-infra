@@ -1,5 +1,14 @@
+# Los .env reales nunca; y tampoco copias de respaldo tipo .env.bueno o
+# .env.roto-123456, que es facil dejar en el checkout de ec2-apps y terminarian
+# en un repo PUBLICO con las contrasenas de Oracle adentro.
 apps/.env
+apps/.env.*
+!apps/.env.example
 mq/.env
+mq/.env.*
+!mq/.env.example
 kafka/.env
+kafka/.env.*
+!kafka/.env.example
 .idea/
 *.pem
