@@ -13,7 +13,8 @@ cd kafka && cp .env.example .env && docker compose up -d
 
 # 2. RabbitMQ (ec2-mq)
 scp -r mq mq:~/ && ssh mq
-cd mq && cp .env.example .env   # completa RABBITMQ_DEFAULT_PASS y la cookie Erlang
+cd mq && cp -n .env.example .env   # completa RABBITMQ_DEFAULT_PASS y la cookie Erlang
+                                  # -n: si el scp ya trajo un .env bueno, no lo pisa
 docker compose up -d
 
 # 3. Apps (ec2-apps)

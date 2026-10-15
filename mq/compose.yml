@@ -14,9 +14,9 @@ x-rabbit: &rabbit
     # Sin valor por defecto a proposito: si falta mq/.env, compose falla aca en
     # vez de arrancar en silencio con guest/guest y la cookie del repo. Ojo que
     # tambien hace fallar down/ps/logs, que interpolan igual.
-    RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?falta mq/.env - copialo de mq/.env.example}
-    RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?falta mq/.env - copialo de mq/.env.example}
-    RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:?falta mq/.env - copialo de mq/.env.example}
+    RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?falta o esta vacio en mq/.env - ver mq/.env.example}
+    RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?falta o esta vacio en mq/.env - ver mq/.env.example}
+    RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:?falta o esta vacio en mq/.env - ver mq/.env.example}
   healthcheck:
     # check_running y no ping: ping solo confirma que la VM de Erlang respira,
     # que es justo el falso positivo que producia el entrypoint viejo.
