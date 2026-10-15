@@ -1,0 +1,6 @@
+# Todo lo de este repo termina corriendo en Linux (las 3 EC2). Con
+# core.autocrlf=true en Windows, un checkout deja CRLF en el working tree y el
+# scp se lo lleva tal cual: YAML lo tolera, pero el parser de rabbitmq.conf no
+# -- deja el \r dentro del valor y el nodo queda declarado "rabbit@rabbitmq2\r".
+# El cluster no forma y el error no apunta a nada.
+* text=auto eol=lf
