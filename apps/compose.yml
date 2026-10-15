@@ -67,8 +67,27 @@ services:
     image: ghcr.io/phamnukz/ms-barriodigital-notify:latest
     restart: always
     environment:
-      JAVA_TOOL_OPTIONS: -Xmx384m
+      # 192m y no 384m: con el octavo servicio en esta t3.medium conviene no
+      # prometer heap que no se usa. Medido en ec2-apps, notify ocupa ~117 MB
+      # reales, asi que 192 le sobra. Es seguro, no urgencia: al medirlo habia
+      # 2.1 GB disponibles, no los ~200 MB que suponia el backlog (D9).
+      JAVA_TOOL_OPTIONS: -Xmx192m
       RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq1}
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+
+  # Plano de control: administra la topologia del broker por REST, gateado con
+  # rol Admin. Publica 8086 para alcanzarlo DENTRO de ec2-apps (curl, o el BFF
+  # si algun dia se expone); el puerto NO se abre en sg-apps.
+  rabbitadmin:
+    image: ghcr.io/phamnukz/ms-barriodigital-rabbitadmin:latest
+    restart: always
+    ports: ["8086:8086"]
+    environment:
+      <<: *aad
+      JAVA_TOOL_OPTIONS: -Xmx192m   # sobrescribe los 384m que trae *aad
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq1}
+      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
       RABBITMQ_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
 
