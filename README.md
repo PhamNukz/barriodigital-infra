@@ -8,19 +8,23 @@ Las EC2 privadas no tienen internet ni git: copia la carpeta desde tu PC (los al
 
 ```bash
 # 1. Kafka (ec2-kafka)
-scp -r kafka kafka:~/ && ssh kafka
+ssh kafka 'rm -rf ~/kafka' && scp -r kafka kafka:~/ && ssh kafka
 cd kafka && cp .env.example .env && docker compose up -d
 
 # 2. RabbitMQ (ec2-mq)
-scp -r mq mq:~/ && ssh mq
+# El rm -rf no es paranoia: "scp -r mq mq:~/" con ~/mq ya existente copia DENTRO
+# y deja ~/mq/mq. Ya paso dos veces y el compose viejo queda corriendo.
+ssh mq 'rm -rf ~/mq' && scp -r mq mq:~/ && ssh mq
 cd mq && cp -n .env.example .env   # completa RABBITMQ_DEFAULT_PASS y la cookie Erlang
                                   # -n: si el scp ya trajo un .env bueno, no lo pisa
 docker compose up -d
 
-# 3. Apps (ec2-apps)
-scp -r apps apps:~/ && ssh apps
-cd apps && cp .env.example .env   # completa Azure AD y contraseñas Oracle
-docker compose up -d
+# 3. Apps (ec2-apps) -- normalmente NO va a mano: lo hace deploy.yml
+# (Actions -> deploy -> Run workflow). Ese workflow escribe apps/.env desde el
+# secret APPS_ENV y corre el compose en ~/barriodigital-infra/apps.
+# Si hace falta a mano, es ESA carpeta: ~/apps es del arranque viejo y esta muerta.
+ssh apps
+cd ~/barriodigital-infra/apps && docker compose up -d
 ```
 
 Verificar desde `ec2-apps`: `nc -zv 10.0.1.8 1521`, `nc -zv 10.0.1.254 5672`, `nc -zv 10.0.1.29 9092`.
@@ -91,6 +95,16 @@ docker compose exec rabbitmq1 rabbitmq-diagnostics status | grep -A5 'Config fil
 silencio**: el watermark esta fijo en 512 MB por nodo (`mq/rabbitmq.conf`) para
 que los dos quepan en los 2 GB de la t3.small. `Config files` confirma que el
 bind mount se cargo de verdad.
+
+**Por que `mq/` no esta en el CI.** `deploy.yml` cubre solo `apps/**` y se queda
+asi a proposito. `ec2-mq` es privada, sin git ni internet, de modo que automatizarla
+obligaria a saltar por `ec2-apps` con `proxy_host` mas un `scp-action`, y a guardar
+un secret nuevo con la cookie Erlang y el password. A cambio no gana ni un punto:
+ningun indicador de EP3 ni de los 11 items de EP4 menciona CI/CD. Al contrario, el
+item 11 pide *demostrar en la nube la ejecucion de docker-compose levantando
+servicios de RabbitMQ*, y eso se muestra mejor corriendo el comando en vivo que
+ensenando un run de Actions. El procedimiento manual de arriba es el deploy oficial
+de `mq/`.
 
 **Pendiente en AWS:** `sg-mq` permite 5672 y 15672 desde `sg-apps`, pero no 5673.
 Hace falta abrirlo cuando aterrice el `addresses` de failover (C8), que es cuando
