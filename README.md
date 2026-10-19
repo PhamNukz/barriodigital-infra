@@ -68,7 +68,7 @@ después el resto.
 - **Frontend:** https://dnddhzpvgg.execute-api.us-east-1.amazonaws.com (el Gateway proxya `/` a ec2-apps:80; Entra exige https)
 - **BFF:** https://dnddhzpvgg.execute-api.us-east-1.amazonaws.com/api (con JWT); directo `http://100.60.226.205:8080` solo para diagnóstico
 
-Para desarrollo local (todo en una máquina), deja `RABBITMQ_HOST`, `KAFKA_BOOTSTRAP_SERVERS` y `KAFKA_PRIVATE_IP` en `host.docker.internal`.
+Para desarrollo local (todo en una máquina), deja `RABBITMQ_HOST`, `KAFKA_BOOTSTRAP_SERVERS` y `KAFKA_PRIVATE_IP` en `host.docker.internal`, y borra la línea `RABBITMQ_ADDRESSES` del `.env` (sin ella se arma sola desde `RABBITMQ_HOST`).
 
 ## Cluster de RabbitMQ (`mq/`)
 
