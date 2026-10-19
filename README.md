@@ -140,3 +140,9 @@ de arriba termina en el loopback de `ec2-mq`.
 ## Sin verificar end-to-end
 
 Esta sesión no tiene Docker disponible, así que estos `compose.yml` están validados solo a nivel de **sintaxis YAML** (`yaml.safe_load` sobre los 3 archivos, sin errores). Nadie los ha corrido de verdad todavía — la primera vez que hagas `docker compose up`, es esperable tener que ajustar algún detalle (nombres de red, tiempos de espera del cluster de RabbitMQ, etc.).
+
+## Matriz de funcionalidades
+
+El estado de cumplimiento de la Prueba 2 (EP3/EP4), con la matriz de funcionalidades y la evidencia de cada
+componente, está en [Cumplimiento-Prueba2.md](https://github.com/PhamNukz/barriodigital-docs/blob/main/Cumplimiento-Prueba2.md)
+(repo `barriodigital-docs`).
