@@ -94,6 +94,18 @@ services:
       RABBITMQ_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
 
+  # Mismo molde que rabbitadmin, para Kafka: crea/lista/modifica/borra topicos
+  # (AdminClient) y muestra consumer groups y lag. Rol Admin. 8087 tampoco se
+  # abre en sg-apps.
+  kafkaadmin:
+    image: ghcr.io/phamnukz/ms-barriodigital-kafkaadmin:latest
+    restart: always
+    ports: ["8087:8087"]
+    environment:
+      <<: *aad
+      JAVA_TOOL_OPTIONS: -Xmx192m   # sobrescribe los 384m que trae *aad
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka1:9092,kafka2:9092,kafka3:9092}
+
   audit:
     image: ghcr.io/phamnukz/ms-barriodigital-audit:latest
     restart: always

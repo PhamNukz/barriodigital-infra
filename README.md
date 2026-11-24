@@ -130,6 +130,70 @@ Hace falta abrirlo cuando aterrice el `addresses` de failover (C8), que es cuand
 los MS marcan el nodo 2 directo. Para las Management UI no se necesita: el tunel
 de arriba termina en el loopback de `ec2-mq`.
 
+## Cluster de Kafka (`kafka/`)
+
+3 ZooKeeper (quorum 2 de 3) + 3 brokers con `default.replication.factor=3`,
+`num.partitions=3` y `min.insync.replicas=2`: con `acks=all` se sigue escribiendo
+con 1 broker caido, y con 2 caidos el productor recibe `NotEnoughReplicas` en vez
+de perder datos.
+
+**Kafka UI** (`:8085`, no se abre en ningun SG): tunel desde tu PC
+
+```bash
+ssh -L 8085:10.0.1.29:8085 apps    # -> http://localhost:8085
+```
+
+**Kafka UI con version fija.** El compose usa `provectuslabs/kafka-ui:v0.7.2`
+(mismo digest que `:latest`). `ec2-kafka` no tiene internet, asi que si la AMI
+solo trae `:latest`, retaguearla una vez antes del `up`:
+
+```bash
+docker tag provectuslabs/kafka-ui:latest provectuslabs/kafka-ui:v0.7.2
+```
+
+**CLI** (scripts de infraestructura equivalentes a Kafka UI; en la imagen Bitnami
+terminan en `.sh`). Desde `ec2-kafka`, en `~/kafka`:
+
+```bash
+alias k='docker compose exec kafka1'
+
+# Topicos: particiones, lider, replicas e ISR por particion
+k kafka-topics.sh --bootstrap-server kafka1:9092 --list
+k kafka-topics.sh --bootstrap-server kafka1:9092 --describe --topic requests.events
+k kafka-topics.sh --bootstrap-server kafka1:9092 --describe --under-replicated-partitions   # vacio = todo en ISR
+
+# Configs: las del topico (retention.ms, cleanup.policy...) y las del broker
+k kafka-configs.sh --bootstrap-server kafka1:9092 --entity-type topics --entity-name audit.timeline --describe
+k kafka-configs.sh --bootstrap-server kafka1:9092 --entity-type brokers --entity-name 1 --describe --all | grep -E 'min.insync|auto.create'
+
+# Consumer groups: offset comprometido, end offset y LAG por particion
+k kafka-consumer-groups.sh --bootstrap-server kafka1:9092 --list
+k kafka-consumer-groups.sh --bootstrap-server kafka1:9092 --describe --group report-svc
+k kafka-consumer-groups.sh --bootstrap-server kafka1:9092 --describe --group audit-svc
+
+# Replay: volver a leer requests.events desde el inicio. El grupo tiene que estar
+# SIN miembros (en ec2-apps: docker compose stop report). Sin --execute es dry-run.
+k kafka-consumer-groups.sh --bootstrap-server kafka1:9092 --group report-svc \
+  --topic requests.events --reset-offsets --to-earliest --dry-run
+k kafka-consumer-groups.sh --bootstrap-server kafka1:9092 --group report-svc \
+  --topic requests.events --reset-offsets --to-earliest --execute
+# (--to-datetime 2026-11-23T00:00:00.000 o --shift-by -5 para un replay parcial)
+```
+
+**Demo de tolerancia a fallos (EP6 ind. 1):** `docker compose stop kafka2` →
+`--describe --topic requests.events` muestra el ISR en 2 y el lider movido; crear
+un tramite sigue funcionando. `docker compose start kafka2` y el ISR vuelve a 3.
+
+**Demo de lag (EP6 ind. 8):** en `ec2-apps`, `docker compose stop report`; crear
+5 tramites; `--describe --group report-svc` (o Kafka UI › Consumers) muestra LAG
+que suma 5; `docker compose start report` y vuelve a 0.
+
+**Apagar el auto-create.** Cuando `ms-barriodigital-kafkaadmin` ya creo los
+topicos con sus configs, descomentar `KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE` en
+`kafka/compose.yml` y reiniciar de a un broker para no cortar el servicio:
+`docker compose up -d kafka1`, esperar que `--under-replicated-partitions` salga
+vacio, y repetir con `kafka2` y `kafka3`.
+
 ## Notas
 
 - `apps/compose.yml` asume que este repo (`infra/`) está clonado como hermano de los otros 7 repos bajo la misma carpeta (igual que en este entorno de desarrollo: `BarrioDigital/{frontend-barriodigital, ms-barriodigital-*, infra}`). En EC2 real, cambia cada `build:` por `image: <ECR_URI>/<repo>:<tag>`.
