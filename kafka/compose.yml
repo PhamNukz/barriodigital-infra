@@ -54,6 +54,13 @@ services:
       KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: 3
       KAFKA_CFG_NUM_PARTITIONS: 3
       KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      # RF 3 + min.insync 2 + acks=all: se sigue escribiendo con 1 broker caido;
+      # con 2 caidos el productor recibe NotEnoughReplicas en vez de perder datos.
+      KAFKA_CFG_MIN_INSYNC_REPLICAS: 2
+      # Activar cuando ms-barriodigital-kafkaadmin haya creado los topicos
+      # (requests.events, audit.timeline y sus .DLT). Antes de eso, el primer
+      # send() de requests es quien crea requests.events.
+      # KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"
       ALLOW_PLAINTEXT_LISTENER: "yes"
       KAFKA_HEAP_OPTS: "-Xmx512m -Xms256m"
       KAFKA_CFG_BROKER_ID: 1
@@ -85,7 +92,9 @@ services:
     volumes: ["kafka3-data:/bitnami/kafka"]
 
   kafka-ui:
-    image: provectuslabs/kafka-ui:latest
+    # Version fija: v0.7.2 es la ultima release (la misma imagen que :latest).
+    # ec2-kafka no tiene internet: ver README, "Kafka UI con version fija".
+    image: provectuslabs/kafka-ui:v0.7.2
     restart: always
     ports: ["8085:8080"]
     environment:
