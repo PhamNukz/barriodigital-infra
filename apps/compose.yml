@@ -77,6 +77,13 @@ services:
       RABBITMQ_ADDRESSES: ${RABBITMQ_ADDRESSES:-${RABBITMQ_HOST:-rabbitmq1}:5672}
       RABBITMQ_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      # SMTP opcional: sin MAIL_HOST el correo queda solo en el log, como antes.
+      # Con MAIL_HOST, notify lo envia al usuario del vecino (destinatario del comando).
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-no-reply@barriodigital.cl}
 
   # Plano de control: administra la topologia del broker por REST, gateado con
   # rol Admin. Publica 8086 para alcanzarlo DENTRO de ec2-apps (curl, o el BFF
